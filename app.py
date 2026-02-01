@@ -69,15 +69,14 @@ if st.session_state.category and not st.session_state.current_card:
         st.session_state.end_time = st.session_state.start_time + 30
         st.session_state.round_active = True
 
-# --- Timer Display ---
+# --- Timer Display and Auto-End Logic ---
 if st.session_state.round_active:
     now = time.time()
     remaining = int(st.session_state.end_time - now)
     timer_placeholder = st.empty()
+
     if remaining > 0:
         timer_placeholder.markdown(f"⏳ Time left: **{remaining} seconds**")
-        time.sleep(1)
-        st.rerun()
     else:
         timer_placeholder.markdown("⏱ **Time’s up!**")
         st.session_state.round_active = False
