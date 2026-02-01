@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import random
+import time
 
 # --- Load card data ---
 @st.cache_data
@@ -24,9 +25,18 @@ st.title("🃏 Articulate Card Generator")
 st.caption("Roll a category, draw cards, and track your round!")
 
 # --- Session State Initialization ---
-for key in ['category', 'current_card', 'correct_count', 'skip_count', 'in_round']:
+defaults = {
+    'category': None,
+    'current_card': None,
+    'correct_count': 0,
+    'skip_count': 0,
+    'round_active': False,
+    'start_time': None,
+    'end_time': None
+}
+for key, val in defaults.items():
     if key not in st.session_state:
-        st.session_state[key] = None if key in ['category', 'current_card'] else 0
+        st.session_state[key] = val
 
 # --- Roll Category ---
 if st.button("🎲 Roll Category"):
@@ -34,7 +44,9 @@ if st.button("🎲 Roll Category"):
     st.session_state.current_card = None
     st.session_state.correct_count = 0
     st.session_state.skip_count = 0
-    st.session_state.in_round = True
+    st.session_state.round_active = False
+    st.session_state.start_time = None
+    st.session_state.end_time = None
 
 # --- Display Selected Category ---
 if st.session_state.category:
@@ -48,13 +60,36 @@ if st.session_state.category:
         unsafe_allow_html=True
     )
 
-# --- Generate Card Button ---
+# --- Generate Card & Start Timer ---
 if st.session_state.category and not st.session_state.current_card:
     if st.button("🎴 Generate Card"):
         clues = df[df['category'] == st.session_state.category]['clue'].tolist()
         st.session_state.current_card = random.choice(clues)
+        st.session_state.start_time = time.time()
+        st.session_state.end_time = st.session_state.start_time + 30
+        st.session_state.round_active = True
+        st.rerun()
 
-# --- Display Current Card and Action Buttons ---
+# --- Timer Display ---
+if st.session_state.round_active:
+    now = time.time()
+    remaining = int(st.session_state.end_time - now)
+    timer_placeholder = st.empty()
+    if remaining > 0:
+        timer_placeholder.markdown(f"⏳ Time left: **{remaining} seconds**")
+        time.sleep(1)
+        st.rerun()
+    else:
+        timer_placeholder.markdown("⏱ **Time’s up!**")
+        st.session_state.round_active = False
+        st.session_state.current_card = None
+        st.markdown("---")
+        st.subheader("🧾 Round Summary")
+        st.success(f"✅ Correct: {st.session_state.correct_count}")
+        st.warning(f"⏭ Skipped: {st.session_state.skip_count}")
+        st.stop()
+
+# --- Show Current Card and Round Buttons ---
 if st.session_state.current_card:
     color = category_colors.get(st.session_state.category, "#f7f7f7")
     st.markdown(
@@ -66,30 +101,16 @@ if st.session_state.current_card:
         unsafe_allow_html=True
     )
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
 
-    # --- Skip Button ---
     if col1.button("⏭ Skip"):
         st.session_state.skip_count += 1
         clues = df[df['category'] == st.session_state.category]['clue'].tolist()
         st.session_state.current_card = random.choice(clues)
         st.rerun()
 
-    # --- Correct Button ---
     if col2.button("✅ Correct!"):
         st.session_state.correct_count += 1
         clues = df[df['category'] == st.session_state.category]['clue'].tolist()
         st.session_state.current_card = random.choice(clues)
         st.rerun()
-
-    # --- End Round Button ---
-    if col3.button("⏹ End Round"):
-        st.markdown("---")
-        st.subheader("🧾 Round Summary")
-        st.success(f"✅ Correct: {st.session_state.correct_count}")
-        st.warning(f"⏭ Skipped: {st.session_state.skip_count}")
-        st.session_state.category = None
-        st.session_state.current_card = None
-        st.session_state.correct_count = 0
-        st.session_state.skip_count = 0
-        st.session_state.in_round = False
