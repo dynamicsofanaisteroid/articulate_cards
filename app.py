@@ -38,11 +38,19 @@ if st.session_state.category:
 
 # --- Display Card ---
 if st.session_state.current_card:
+    category_color = {
+        "Person": "#FF6B6B",
+        "Object": "#4ECDC4",
+        "Action": "#45B7D1",
+        "World": "#96CEB4",
+        "Random": "#FECA57"
+    }.get(st.session_state.category, "#f7f7f7")
+
     st.markdown(
         f'''
-        <div style="background-color:#f7f7f7;padding:30px;border-radius:15px;text-align:center">
-            <h2 style="color:#333;">{st.session_state.current_card}</h2>
-            <p style="color:#666;font-style:italic;">Category: {st.session_state.category}</p>
+        <div style="background-color:{category_color};padding:30px;border-radius:15px;text-align:center">
+            <h2 style="color:white;">{st.session_state.current_card}</h2>
+            <p style="color:white;font-style:italic;">Category: {st.session_state.category}</p>
         </div>
         ''',
         unsafe_allow_html=True
