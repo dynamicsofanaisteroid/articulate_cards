@@ -68,7 +68,6 @@ if st.session_state.category and not st.session_state.current_card:
         st.session_state.start_time = time.time()
         st.session_state.end_time = st.session_state.start_time + 30
         st.session_state.round_active = True
-        st.rerun()
 
 # --- Timer Display ---
 if st.session_state.round_active:
