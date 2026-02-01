@@ -32,7 +32,8 @@ defaults = {
     'skip_count': 0,
     'round_active': False,
     'start_time': None,
-    'end_time': None
+    'end_time': None,
+    'used_cards': []
 }
 for key, val in defaults.items():
     if key not in st.session_state:
@@ -47,6 +48,7 @@ if st.button("🎲 Roll Category"):
     st.session_state.round_active = False
     st.session_state.start_time = None
     st.session_state.end_time = None
+    st.session_state.used_cards = []
 
 # --- Display Selected Category ---
 if st.session_state.category:
@@ -65,20 +67,25 @@ if st.session_state.category and not st.session_state.current_card:
     if st.button("🎴 Generate Card"):
         clues = df[df['category'] == st.session_state.category]['clue'].tolist()
         st.session_state.current_card = random.choice(clues)
+        st.session_state.used_cards = [st.session_state.current_card]
         st.session_state.start_time = time.time()
         st.session_state.end_time = st.session_state.start_time + 30
         st.session_state.round_active = True
+        st.rerun()
 
 # --- Timer Display and Auto-End Logic ---
 if st.session_state.round_active:
     now = time.time()
     remaining = int(st.session_state.end_time - now)
-    timer_placeholder = st.empty()
-
+    
     if remaining > 0:
-        timer_placeholder.markdown(f"⏳ Time left: **{remaining} seconds**")
+        st.markdown(f"⏳ Time left: **{remaining} seconds**")
+        # Auto-refresh every second to keep timer updating
+        time.sleep(0.1)
+        st.rerun()
     else:
-        timer_placeholder.markdown("⏱ **Time’s up!**")
+        # Time's up - end the round
+        st.markdown("⏱ **Time's up!**")
         st.session_state.round_active = False
         st.session_state.current_card = None
         st.markdown("---")
@@ -99,16 +106,37 @@ if st.session_state.current_card:
         unsafe_allow_html=True
     )
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     if col1.button("⏭ Skip"):
         st.session_state.skip_count += 1
+        # Get new card (avoiding recently used ones if possible)
         clues = df[df['category'] == st.session_state.category]['clue'].tolist()
-        st.session_state.current_card = random.choice(clues)
+        available_clues = [c for c in clues if c not in st.session_state.used_cards[-5:]]
+        if not available_clues:
+            available_clues = clues
+        st.session_state.current_card = random.choice(available_clues)
+        st.session_state.used_cards.append(st.session_state.current_card)
         st.rerun()
 
     if col2.button("✅ Correct!"):
         st.session_state.correct_count += 1
+        # Get new card (avoiding recently used ones if possible)
         clues = df[df['category'] == st.session_state.category]['clue'].tolist()
-        st.session_state.current_card = random.choice(clues)
+        available_clues = [c for c in clues if c not in st.session_state.used_cards[-5:]]
+        if not available_clues:
+            available_clues = clues
+        st.session_state.current_card = random.choice(available_clues)
+        st.session_state.used_cards.append(st.session_state.current_card)
+        st.rerun()
+
+    if col3.button("🛑 End Round"):
+        st.session_state.round_active = False
+        st.session_state.current_card = None
+        st.markdown("---")
+        st.subheader("🧾 Round Summary")
+        st.success(f"✅ Correct: {st.session_state.correct_count}")
+        st.warning(f"⏭ Skipped: {st.session_state.skip_count}")
+        elapsed = int(time.time() - st.session_state.start_time)
+        st.info(f"⏱ Time used: {elapsed} seconds")
         st.rerun()
