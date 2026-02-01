@@ -21,7 +21,7 @@ category_colors = {
 # --- App UI ---
 st.set_page_config(page_title="Articulate Cards", page_icon="🃏", layout="centered")
 st.title("🃏 Articulate Card Generator")
-st.caption("Roll a category die and reveal your next card!")
+st.caption("Roll the die to get a category, then draw your card!")
 
 # --- Session State Setup ---
 if 'category' not in st.session_state:
@@ -32,18 +32,33 @@ if 'current_card' not in st.session_state:
 # --- Roll Category ---
 if st.button("🎲 Roll Category"):
     st.session_state.category = random.choice(df['category'].unique())
-    clues = df[df['category'] == st.session_state.category]['clue'].tolist()
-    st.session_state.current_card = random.choice(clues)
+    st.session_state.current_card = None
+
+# --- Display Category ---
+if st.session_state.category:
+    color = category_colors.get(st.session_state.category, "#f7f7f7")
+    st.markdown(
+        f'''
+        <div style="background-color:{color};padding:20px;border-radius:10px;text-align:center;margin-bottom:20px">
+            <h3 style="color:white;">Category: {st.session_state.category}</h3>
+        </div>
+        ''',
+        unsafe_allow_html=True
+    )
+
+# --- Generate Card ---
+if st.session_state.category:
+    if st.button("🎴 Generate Card"):
+        clues = df[df['category'] == st.session_state.category]['clue'].tolist()
+        st.session_state.current_card = random.choice(clues)
 
 # --- Display Card ---
 if st.session_state.current_card:
-    category = st.session_state.category
-    color = category_colors.get(category, "#f7f7f7")
+    color = category_colors.get(st.session_state.category, "#f7f7f7")
     st.markdown(
         f'''
         <div style="background-color:{color};padding:30px;border-radius:15px;text-align:center">
             <h2 style="color:white;">{st.session_state.current_card}</h2>
-            <p style="color:white;font-style:italic;">Category: {category}</p>
         </div>
         ''',
         unsafe_allow_html=True
