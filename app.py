@@ -5,7 +5,7 @@ import random
 # --- Load card data ---
 @st.cache_data
 def load_data():
-    return pd.read_csv("cards.csv")
+    return pd.read_csv("cards (1).csv")
 
 df = load_data()
 
