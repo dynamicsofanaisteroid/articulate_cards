@@ -73,14 +73,14 @@ if st.session_state.current_card:
         st.session_state.skip_count += 1
         clues = df[df['category'] == st.session_state.category]['clue'].tolist()
         st.session_state.current_card = random.choice(clues)
-        st.experimental_rerun()
+        st.rerun()
 
     # --- Correct Button ---
     if col2.button("✅ Correct!"):
         st.session_state.correct_count += 1
         clues = df[df['category'] == st.session_state.category]['clue'].tolist()
         st.session_state.current_card = random.choice(clues)
-        st.experimental_rerun()
+        st.rerun()
 
     # --- End Round Button ---
     if col3.button("⏹ End Round"):
