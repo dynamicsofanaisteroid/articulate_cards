@@ -54,7 +54,7 @@ if st.session_state.category and not st.session_state.current_card:
         clues = df[df['category'] == st.session_state.category]['clue'].tolist()
         st.session_state.current_card = random.choice(clues)
 
-# --- Display Current Card ---
+# --- Display Current Card and Action Buttons ---
 if st.session_state.current_card:
     color = category_colors.get(st.session_state.category, "#f7f7f7")
     st.markdown(
@@ -73,12 +73,14 @@ if st.session_state.current_card:
         st.session_state.skip_count += 1
         clues = df[df['category'] == st.session_state.category]['clue'].tolist()
         st.session_state.current_card = random.choice(clues)
+        st.experimental_rerun()
 
     # --- Correct Button ---
     if col2.button("✅ Correct!"):
         st.session_state.correct_count += 1
         clues = df[df['category'] == st.session_state.category]['clue'].tolist()
         st.session_state.current_card = random.choice(clues)
+        st.experimental_rerun()
 
     # --- End Round Button ---
     if col3.button("⏹ End Round"):
